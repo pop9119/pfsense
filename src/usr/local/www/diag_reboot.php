@@ -1,7 +1,6 @@
 <?php
 /*
  * diag_reboot.php
- *
  * part of pfSense (https://www.pfsense.org)
  * Copyright (c) 2004-2013 BSD Perimeter
  * Copyright (c) 2013-2016 Electric Sheep Fencing
@@ -9,13 +8,12 @@
  * All rights reserved.
  *
  * originally based on m0n0wall (http://m0n0.ch/wall)
- * Copyright (c) 2003-2004 Manuel Kasper <mk@neon1.net>.
+ * Copyright (c) 2003-2004 Manuel Kasper <mk@neon1.net>
  * All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -38,8 +36,8 @@ require_once("guiconfig.inc");
 require_once("functions.inc");
 require_once("captiveportal.inc");
 
-$guitimeout = 90;	// Seconds to wait before reloading the page after reboot
-$guiretry = 20;		// Seconds to try again if $guitimeout was not long enough
+$guitimeout = 90;t// Seconds to wait before reloading the page after reboot
+$guiretry = 20;t// Seconds to try again if $guitimeout was not long enough
 
 $pgtitle = array(gettext("Diagnostics"), gettext("Reboot"));
 $platform = system_identify_specific_platform();
@@ -67,8 +65,12 @@ if (isset($_POST['rebootmode'])):
 				notify_all_remote(sprintf(gettext("%s is rebooting now."), g_get('product_label')));
 				system_reboot();
 				break;
+			case 'restart_unbound':
+				exec('sh /usr/local/www/scripts/restart_unbound.sh');
+				print_info_box(gettext("Unbound processes killed and service restarted."), 'success');
+				break;
 			default:
-				header('Location: /diag_reboot.php');
+				theheader('Location: /diag_reboot.php');
 				break;
 		}
 		print('</pre></div>');
@@ -87,8 +89,7 @@ events.push(function() {
 		$.ajax({
 			url	: "/index.php", // or other resource
 			type : "HEAD"
-		})
-		.done(function() {
+		}).done(function() {
 			window.location="/index.php";
 		});
 	}
@@ -116,7 +117,9 @@ events.push(function() {
 
 });
 //]]>
+
 </script>
+
 <?php
 else:
 
@@ -144,6 +147,15 @@ $section->addInput(new Form_Select(
 
 $form->add($section);
 
+$unbound_section = new Form_Section(gettext('Unbound Management'));
+$unbound_section->addInput(new Form_Button(
+        'restart_unbound_btn',
+        gettext('Restart Unbound (Force Kill)'),
+        null,
+        'fa-solid fa-refresh'
+))->addClass('btn-secondary');
+$form->add($unbound_section);
+
 $form->addGlobal(new Form_Button(
         'Submit',
         'Submit',
@@ -156,3 +168,4 @@ print($form);
 endif;
 
 include("foot.inc");
+?>
